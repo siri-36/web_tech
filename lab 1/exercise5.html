@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sai Srija Kothareddy | Portfolio</title>
+    <style>
+        /* Modern Tech Theme Colors */
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), 
+                        url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            padding: 80px 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--accent-blue);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 3rem;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            color: var(--accent-green);
+            margin-top: 10px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        section {
+            margin-bottom: 50px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            border-left: 5px solid var(--accent-blue);
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+
+        /* About & Skills Grid */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Skills Tag Styling */
+        .skills-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .skill-tag {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Projects Section */
+        .project-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .project-card {
+            background: var(--card-bg);
+            border: 1px solid #334155;
+            padding: 20px;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-green);
+        }
+
+        .project-card h3 {
+            color: var(--accent-green);
+            margin-top: 0;
+        }
+
+        /* Footer */
+        footer {
+            background: #020617;
+            text-align: center;
+            padding: 50px 20px;
+            margin-top: 50px;
+        }
+
+        .contact-info a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .grid-layout, .project-list { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Sai Srija Kothareddy</h1>
+        <p>CSE Student | Full Stack Enthusiast | Data Science Aspirant</p>
+    </header>
+
+    <div class="container">
+        <div class="grid-layout">
+            <section id="about" class="card">
+                <h2>About Me</h2>
+                <p>I am a CSE student currently pursuing my B.Tech at <strong>VIT-AP University</strong>. I have a deep interest in building scalable applications and uncovering insights from data, aiming to bridge the gap between Full Stack development and Data Science fields.</p>
+                <p>I thrive on solving complex algorithmic challenges and enjoy exploring the latest advancements in Artificial Intelligence. My goal is to develop technology that is both functionally robust and user-centric.</p>
+            </section>
+
+            <section id="skills" class="card">
+                <h2>Technical Skills</h2>
+                <div class="skills-container">
+                    <span class="skill-tag">Java</span>
+                    <span class="skill-tag">Python</span>
+                    <span class="skill-tag">HTML5</span>
+                    <span class="skill-tag">CSS3</span>
+                    <span class="skill-tag">JavaScript</span>
+                    <span class="skill-tag">SQL</span>
+                </div>
+            </section>
+        </div>
+
+        <section id="projects">
+            <h2>Featured Projects</h2>
+            <div class="project-list">
+                <div class="project-card">
+                    <h3>E-Commerce Gift Website</h3>
+                    <p>A specialized platform for curated gifts featuring a personalized recommendation system, secure checkout, and a dynamic product catalog built with a focus on seamless user experience.</p>
+                </div>
+                <div class="project-card">
+                    <h3>Gen AI Dashboard</h3>
+                    <p>An innovative project leveraging Generative AI models to automate content creation and data summarization, featuring an interactive UI to monitor model outputs in real-time.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <h2>Get In Touch</h2>
+        <div class="contact-info">
+            <p>Ready to collaborate or discuss tech? Reach out to me below:</p>
+            <a href="mailto:saisrijakothareddy@email.com">saisrijakothareddy@email.com</a>
+            <a href="tel:+919876543210">+91 8074745221</a>
+        </div>
+        <p style="margin-top: 30px; font-size: 0.8rem; color: var(--text-dim);">
+            &copy; 2025 Sai Srija Kothareddy. saisrijakothareddy@gmail.com
+        </p>
+    </footer>
+
+</body>
+</html>
