@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), 
+                        url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        h1 { color: #1e272e; margin-bottom: 30px; font-weight: 700; font-size: 2.5rem; }
+
+        .input-group {
+            display: flex;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+            border: 1px solid #eee;
+        }
+
+        input { border: none; padding: 10px; outline: none; width: 280px; font-size: 15px; background: transparent; }
+
+        button#addBtn {
+            background: #1e272e;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .board { display: flex; gap: 25px; width: 100%; max-width: 1100px; }
+
+        .column {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            min-height: 500px;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .column h3 { font-size: 17px; color: #485460; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+
+        .task-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            cursor: grab;
+            position: relative;
+            border-left: 5px solid #d1d8e0;
+            transition: 0.2s;
+        }
+
+        .task-card strong { display: block; margin-bottom: 8px; font-size: 15px; padding-right: 25px; }
+
+        .date { font-size: 12px; color: #a5b1c2; font-weight: 500; }
+
+        /* Delete Button */
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .delete-btn:hover { color: #eb4d4b; }
+
+        /* The Tick Symbol */
+        .tick-mark {
+            display: none;
+            color: #26de81;
+            font-size: 18px;
+            margin-left: 5px;
+        }
+
+        /* Completed State logic */
+        .completed-state {
+            border-left-color: #26de81 !important;
+        }
+        
+        .completed-state .tick-mark {
+            display: inline;
+        }
+
+        /* Toast */
+        #toast {
+            visibility: hidden;
+            background-color: #1e272e;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 50px;
+            position: fixed;
+            top: 30px;
+            z-index: 1000;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        #toast.show { visibility: visible; animation: fastFade 1.5s forwards; }
+
+        @keyframes fastFade {
+            0% { transform: translateY(-20px); opacity: 0; }
+            20% { transform: translateY(0); opacity: 1; }
+            80% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-20px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast">Task Completed Successfully ✅</div>
+
+    <h1>Task Manager</h1>
+
+    <div class="input-group">
+        <input type="text" id="taskInput" placeholder="What needs to be done?">
+        <button id="addBtn" onclick="addTask()">+ Add Task</button>
+    </div>
+
+    <div class="board">
+        <div class="column" id="todo" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>📝 To Do</h3>
+            <div class="task-list"></div>
+        </div>
+        <div class="column" id="inprogress" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>⏳ In Progress</h3>
+            <div class="task-list"></div>
+        </div>
+        <div class="column" id="completed" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>✅ Completed</h3>
+            <div class="task-list">
+                <div class="task-card completed-state" id="fixed-task" draggable="true" ondragstart="drag(event)">
+                    <button class="delete-btn" onclick="deleteTask('fixed-task')">&times;</button>
+                    <strong>Assignment Submission <span class="tick-mark">✔</span></strong>
+                    <span class="date">📅 Created: Jan 7</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            if (!input.value.trim()) return;
+
+            const taskId = 'task-' + Date.now();
+            const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.id = taskId;
+            card.draggable = true;
+            card.ondragstart = drag;
+
+            card.innerHTML = `
+                <button class="delete-btn" onclick="deleteTask('${taskId}')">&times;</button>
+                <strong>${input.value} <span class="tick-mark">✔</span></strong>
+                <span class="date">📅 Created: ${date}</span>
+            `;
+
+            document.querySelector('#todo .task-list').appendChild(card);
+            input.value = "";
+        }
+
+        function deleteTask(id) {
+            const task = document.getElementById(id);
+            if (task) task.remove();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+            
+            let target = ev.target;
+            while (target && !target.classList.contains('column')) {
+                target = target.parentElement;
+            }
+
+            if (target) {
+                target.querySelector('.task-list').appendChild(draggedElement);
+                if (target.id === 'completed') {
+                    draggedElement.classList.add('completed-state');
+                    showToast();
+                } else {
+                    draggedElement.classList.remove('completed-state');
+                }
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById("toast");
+            toast.className = "show";
+            setTimeout(() => { toast.className = ""; }, 1500);
+        }
+    </script>
+</body>
+</html>
