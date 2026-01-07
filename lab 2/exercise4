@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Identity Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-primary: #4f46e5; /* Modern Indigo */
+            --brand-danger: #ef4444;
+            --surface-glass: rgba(255, 255, 255, 0.85);
+            --border-light: rgba(229, 231, 235, 0.5);
+            --text-heading: #111827;
+            --text-body: #4b5563;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-body);
+            /* Abstract Professional Background */
+            background: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.08) 0, transparent 50%),
+                        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0, transparent 50%),
+                        #f9fafb;
+            background-attachment: fixed;
+        }
+
+        .dashboard-container { width: 100%; max-width: 1000px; }
+
+        header { text-align: left; margin-bottom: 40px; }
+        header h1 { font-size: 2rem; font-weight: 700; color: var(--text-heading); margin: 0; }
+        header p { color: var(--text-body); margin-top: 8px; }
+
+        /* Card Component */
+        .glass-card {
+            background: var(--surface-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 24px; color: var(--text-heading); display: flex; align-items: center; gap: 10px; }
+
+        /* Registration Form Layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 0.85rem; font-weight: 600; color: var(--text-heading); }
+
+        input {
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Action Buttons */
+        .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; }
+        
+        button {
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary { background: var(--brand-primary); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+
+        .btn-outline { background: transparent; border: 1.5px solid #d1d5db; color: var(--text-body); }
+        .btn-outline:hover { background: #f3f4f6; border-color: #9ca3af; }
+
+        /* User Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 16px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 16px; font-size: 0.95rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+        
+        .user-name { font-weight: 600; color: var(--text-heading); }
+        .user-email { color: #6b7280; font-size: 0.85rem; }
+
+        .btn-delete {
+            color: var(--brand-danger);
+            background: rgba(239, 68, 68, 0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        .btn-delete:hover { background: var(--brand-danger); color: white; }
+
+        /* Feedback Notifications */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--text-heading);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 100;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="toast"></div>
+
+    <div class="dashboard-container">
+        <header>
+            <h1>User Management System</h1>
+        </header>
+
+        <div class="glass-card">
+            <div class="section-title">
+                <span>Registration</span>
+            </div>
+            <form id="userForm">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Full Name</label>
+                        <input type="text" id="regName" placeholder="Your Name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <input type="email" id="regEmail" placeholder="email@company.com" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Mobile Number</label>
+                        <input type="text" id="regMobile" placeholder="10-digit mobile" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Secure Password</label>
+                        <input type="password" id="regPassword" placeholder="Minimum 6 characters" required>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <button type="button" class="btn-outline" onclick="purgeDatabase()">Clear Database</button>
+                    <button type="submit" class="btn-primary">Provision User Account</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="glass-card">
+            <div class="section-title">
+                <span>Active Directory</span>
+            </div>
+            <table id="userDirectory">
+                <thead>
+                    <tr>
+                        <th>Identified User</th>
+                        <th>Contact Details</th>
+                        <th>Security Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="directoryBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * System State Configuration
+         * Data Persistence Key: 'auth_user_registry'
+         */
+        const STORAGE_KEY = 'auth_user_registry';
+        const userForm = document.getElementById('userForm');
+        const directoryBody = document.getElementById('directoryBody');
+
+        // Initialization: Load User Registry on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', synchronizeDirectory);
+
+        // Core Registration Logic
+        userForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // Input Extraction & Sanitization
+            const userData = {
+                name: document.getElementById('regName').value.trim(),
+                email: document.getElementById('regEmail').value.trim(),
+                mobile: document.getElementById('regMobile').value.trim(),
+                password: document.getElementById('regPassword').value
+            };
+
+            // Server-side Logic Simulation (Validation)
+            if (userData.mobile.length !== 10 || isNaN(userData.mobile)) {
+                return notify("Validation Error: Mobile must be 10 numeric digits.");
+            }
+            if (userData.password.length < 6) {
+                return notify("Security Error: Password fails minimum length requirements.");
+            }
+
+            // Retrieve and Parse Local Storage
+            const registry = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+            // Duplicate Integrity Check
+            if (registry.some(user => user.email === userData.email)) {
+                return notify("Conflict: A user with this email already exists.");
+            }
+
+            // Persistence Serialization
+            registry.push(userData);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(registry));
+
+            notify("Account Provisioned Successfully.");
+            userForm.reset();
+            synchronizeDirectory();
+        });
+
+        /**
+         * Synchronizes the UI with the LocalStorage state
+         */
+        function synchronizeDirectory() {
+            const registry = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            directoryBody.innerHTML = '';
+
+            if (registry.length === 0) {
+                directoryBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#9ca3af; padding: 40px;">No active records found in the directory.</td></tr>`;
+                return;
+            }
+
+            registry.forEach((user, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div class="user-name">${user.name}</div>
+                        <div class="user-email">${user.email}</div>
+                    </td>
+                    <td>${user.mobile}</td>
+                    <td><span style="color:#10b981; font-size:0.8rem; font-weight:700;">● Active</span></td>
+                    <td>
+                        <button class="btn-delete" onclick="deprovisionUser(${index})">Deprovision</button>
+                    </td>
+                `;
+                directoryBody.appendChild(row);
+            });
+        }
+
+        function deprovisionUser(index) {
+            const registry = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            registry.splice(index, 1);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(registry));
+            synchronizeDirectory();
+            notify("User record deprovisioned from the registry.");
+        }
+
+        function purgeDatabase() {
+            if (confirm("Executing Global Purge: Are you sure you want to erase all user records?")) {
+                localStorage.removeItem(STORAGE_KEY);
+                synchronizeDirectory();
+                notify("Registry purged. System state reset.");
+            }
+        }
+
+        function notify(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+    </script>
+</body>
+</html>
