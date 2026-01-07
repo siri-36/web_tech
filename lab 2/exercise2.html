@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Multimedia Exercise</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background-color: #f0f7f4; 
+            color: #2d3436; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 40px; 
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 650px; 
+        }
+        h1 { color: #132e1e; text-align: center; }
+        h2 { border-left: 4px solid #27ae60; padding-left: 15px; margin-top: 30px; font-size: 1.2rem; }
+        
+        video, audio { width: 100%; border-radius: 8px; margin-top: 10px; }
+        
+        .time-monitor { 
+            margin-top: 10px; 
+            font-family: 'Courier New', Courier, monospace; 
+            font-weight: bold; 
+            color: #16a085; 
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1> Multimedia</h1>
+
+        <h2> Scene: Mountain River</h2>
+        <video id="riverVideo" controls>
+            <source src="https://assets.codepen.io/6093409/river.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="time-monitor">Current Video Time: <span id="vTime">0:00</span></div>
+
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+        <h2> Sound: Bgm</h2>
+        <audio id="Audio" controls>
+            <source src="https://actions.google.com/sounds/v1/ambiences/forest_daybreak.ogg" type="audio/ogg">
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+            Your browser does not support the audio tag.
+        </audio>
+        <div class="time-monitor">Current Audio Time: <span id="aTime">0:00</span></div>
+    </div>
+
+    <script>
+        function formatTime(seconds) {
+            let minutes = Math.floor(seconds / 60);
+            let secs = Math.floor(seconds % 60);
+            if (secs < 10) secs = '0' + secs;
+            return minutes + ':' + secs;
+        }
+
+        const video = document.getElementById('riverVideo');
+        const videoLabel = document.getElementById('vTime');
+        
+        video.ontimeupdate = function() {
+            videoLabel.innerText = formatTime(video.currentTime);
+        };
+
+        const audio = document.getElementById('Audio');
+        const audioLabel = document.getElementById('aTime');
+        
+        audio.ontimeupdate = function() {
+            audioLabel.innerText = formatTime(audio.currentTime);
+        };
+    </script>
+
+</body>
+</html>
