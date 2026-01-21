@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroHub - Customer Feedback</title>
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --dark-blue: #1e40af;
+            --error-red: #dc2626;
+            --text-main: #1f2937;
+            --bg-light: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .feedback-card {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        header { border-bottom: 2px solid var(--bg-light); margin-bottom: 24px; padding-bottom: 16px; }
+        h2 { margin: 0; color: #111827; font-size: 1.5rem; }
+        p { color: #64748b; font-size: 0.9rem; margin-top: 4px; }
+
+        .q-wrapper { margin-bottom: 24px; position: relative; }
+        .q-label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
+        .req { color: var(--error-red); margin-left: 2px; }
+
+        /* Inputs */
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+        /* Options styling */
+        .options-grid { display: flex; flex-direction: column; gap: 10px; background: var(--bg-light); padding: 12px; border-radius: 8px; }
+        .opt-item { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.95rem; }
+        .opt-item input { cursor: pointer; width: 16px; height: 16px; }
+
+        /* Validation Messages */
+        .error-hint { color: var(--error-red); font-size: 0.8rem; margin-top: 6px; font-weight: 500; display: none; }
+        .input-invalid { border-color: var(--error-red) !important; background-color: #fef2f2; }
+
+        /* Character Counter */
+        .char-counter { font-size: 0.75rem; color: #94a3b8; text-align: right; margin-top: 4px; }
+
+        /* Submit Button */
+        .btn-submit {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-top: 10px;
+        }
+        .btn-submit:hover { background-color: var(--dark-blue); }
+    </style>
+</head>
+<body>
+
+<div class="feedback-card">
+    <header>
+        <h2>ElectroHub Feedback</h2>
+        <p>Help us improve your shopping experience.</p>
+    </header>
+
+    <form id="surveyForm" novalidate>
+        <div id="surveyRoot"></div>
+        <button type="submit" class="btn-submit">Submit Feedback</button>
+    </form>
+</div>
+
+<script>
+    // 1. Structure defining questions for an Electronic Store
+    const surveyConfig = [
+        {
+            id: "customer_name",
+            type: "text",
+            label: "Full Name",
+            required: true,
+            limit: 40
+        },
+        {
+            id: "purchase_cat",
+            type: "radio",
+            label: "Main category of your purchase?",
+            required: true,
+            options: ["Smartphones", "Laptops & PCs", "Home Appliances", "Audio/Accessories"]
+        },
+        {
+            id: "store_factors",
+            type: "checkbox",
+            label: "What satisfied you today? (Select at least 2)",
+            required: true,
+            min: 2,
+            options: ["Staff Knowledge", "Pricing", "Store Cleanliness", "Product Range", "Demo Availability"]
+        },
+        {
+            id: "comments",
+            type: "text",
+            label: "Any specific feedback for our tech team?",
+            required: false,
+            limit: 100
+        }
+    ];
+
+    const root = document.getElementById('surveyRoot');
+
+    // 2. Dynamic generation (DOM manipulation)
+    function initializeSurvey() {
+        surveyConfig.forEach(q => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'q-wrapper';
+            wrapper.id = `wrapper-${q.id}`;
+
+            const label = document.createElement('label');
+            label.className = 'q-label';
+            label.innerHTML = `${q.label} ${q.required ? '<span class="req">*</span>' : ''}`;
+            wrapper.appendChild(label);
+
+            if (q.type === 'text') {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = q.id;
+                input.placeholder = `Type here...`;
+                
+                // Real-time character counter
+                if (q.limit) {
+                    const counter = document.createElement('div');
+                    counter.className = 'char-counter';
+                    counter.id = `count-${q.id}`;
+                    counter.innerText = `0 / ${q.limit}`;
+                    
+                    input.addEventListener('input', () => {
+                        const len = input.value.length;
+                        counter.innerText = `${len} / ${q.limit}`;
+                        if (len > q.limit) counter.style.color = 'var(--error-red)';
+                        else counter.style.color = '#94a3b8';
+                    });
+                    
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(counter);
+                } else {
+                    wrapper.appendChild(input);
+                }
+            } 
+            else {
+                const group = document.createElement('div');
+                group.className = 'options-grid';
+                q.options.forEach(opt => {
+                    const item = document.createElement('label');
+                    item.className = 'opt-item';
+                    item.innerHTML = `<input type="${q.type}" name="${q.id}" value="${opt}"> ${opt}`;
+                    group.appendChild(item);
+                });
+                wrapper.appendChild(group);
+            }
+
+            const err = document.createElement('div');
+            err.className = 'error-hint';
+            err.id = `err-${q.id}`;
+            wrapper.appendChild(err);
+
+            root.appendChild(wrapper);
+        });
+    }
+
+    // 3, 4, 5. Advanced Validation Logic
+    function validate() {
+        let allValid = true;
+
+        surveyConfig.forEach(q => {
+            const errEl = document.getElementById(`err-${q.id}`);
+            let errorMsg = "";
+            let fieldValid = true;
+
+            if (q.type === 'text') {
+                const el = document.getElementById(q.id);
+                const val = el.value.trim();
+                if (q.required && val === "") {
+                    fieldValid = false;
+                    errorMsg = "This information is required.";
+                } else if (q.limit && val.length > q.limit) {
+                    fieldValid = false;
+                    errorMsg = `Maximum ${q.limit} characters allowed.`;
+                }
+                el.classList.toggle('input-invalid', !fieldValid);
+            } 
+            else if (q.type === 'radio') {
+                const picked = document.querySelector(`input[name="${q.id}"]:checked`);
+                if (q.required && !picked) {
+                    fieldValid = false;
+                    errorMsg = "Please select one category.";
+                }
+            } 
+            else if (q.type === 'checkbox') {
+                const checked = document.querySelectorAll(`input[name="${q.id}"]:checked`);
+                if (q.required && checked.length === 0) {
+                    fieldValid = false;
+                    errorMsg = "Selection is required.";
+                } else if (q.min && checked.length < q.min) {
+                    fieldValid = false;
+                    errorMsg = `Please select at least ${q.min} factors.`;
+                }
+            }
+
+            if (!fieldValid) {
+                errEl.innerText = errorMsg;
+                errEl.style.display = 'block';
+                allValid = false;
+            } else {
+                errEl.style.display = 'none';
+            }
+        });
+
+        return allValid;
+    }
+
+    document.getElementById('surveyForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (validate()) {
+            alert("Thank you! Your feedback for ElectroHub has been recorded.");
+            location.reload();
+        }
+    });
+
+    initializeSurvey();
+</script>
+
+</body>
+</html>
