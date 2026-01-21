@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stationery Hub - Intelligent Cart</title>
+    <style>
+        :root {
+            --primary-blue: #2980b9;
+            --dark-blue: #1c5982;
+            --error-red: #ff4d4d;
+            --text-main: #333;
+            --success-green: #27ae60;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .section { flex: 1; }
+
+        h2 {
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #f4f4f4;
+            padding-bottom: 10px;
+        }
+
+        /* Inventory Grid */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stock-label { font-size: 0.85rem; margin-bottom: 10px; }
+        .low-stock { color: var(--error-red); font-weight: bold; }
+
+        .btn-blue {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-blue:hover { background-color: var(--dark-blue); }
+
+        /* Cart Table */
+        .cart-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .cart-table th { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.8rem; }
+        .cart-table td { padding: 10px; border-bottom: 1px solid #f9f9f9; }
+
+        .qty-btn { border: 1px solid #ddd; background: white; cursor: pointer; padding: 2px 8px; }
+
+        .summary-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fcfcfc;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .discount-badge { color: var(--success-green); font-weight: 600; }
+
+        .total-row { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 1.4rem; 
+            font-weight: bold; 
+            margin-top: 10px; 
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="section">
+        <h2>Stationery Catalog</h2>
+        <div class="inventory-grid" id="inventoryGrid"></div>
+    </div>
+
+    <div class="section">
+        <h2>Your Shopping Cart</h2>
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="cartItems"></tbody>
+        </table>
+
+        <div class="summary-box">
+            <div class="summary-line">
+                <span>Cart Subtotal:</span>
+                <span id="subTotal">₹0</span>
+            </div>
+            <div class="summary-line discount-badge">
+                <span>Discounts:</span>
+                <span id="totalDiscount">-₹0</span>
+            </div>
+            <div class="summary-line">
+                <span>GST (18%):</span>
+                <span id="gstTotal">₹0</span>
+            </div>
+            <div class="total-row">
+                <span>Grand Total:</span>
+                <span id="finalPrice">₹0</span>
+            </div>
+            <button onclick="checkout()" class="btn-blue" style="margin-top: 20px; padding: 15px;">Checkout Now</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inventory = [
+        { id: 1, name: "Leather Journal", category: "Paper", price: 850, stock: 15 },
+        { id: 2, name: "Fountain Pen Set", category: "Writing", price: 1200, stock: 2 },
+        { id: 3, name: "Washi Tape (10pk)", category: "Decor", price: 450, stock: 20 },
+        { id: 4, name: "Acrylic Markers", category: "Writing", price: 1100, stock: 5 },
+        { id: 5, name: "Desk Organizer", category: "Office", price: 1500, stock: 1 }
+    ];
+
+    let cart = [];
+
+    function renderInventory() {
+        const grid = document.getElementById('inventoryGrid');
+        grid.innerHTML = inventory.map(item => `
+            <div class="product-card">
+                
+                <strong>${item.name}</strong>
+                <p>₹${item.price}</p>
+                <div class="stock-label ${item.stock < 3 ? 'low-stock' : ''}">
+                    Stock: ${item.stock}
+                </div>
+                <button class="btn-blue" onclick="addToCart(${item.id})" ${item.stock === 0 ? 'disabled' : ''}>
+                    ${item.stock === 0 ? 'Sold Out' : 'Add to Cart'}
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function addToCart(id) {
+        const product = inventory.find(p => p.id === id);
+        if (product.stock > 0) {
+            const item = cart.find(c => c.id === id);
+            if (item) item.qty++;
+            else cart.push({ ...product, qty: 1 });
+            
+            product.stock--;
+            renderInventory();
+            updateCart();
+        }
+    }
+
+    function updateQty(id, change) {
+        const item = cart.find(i => i.id === id);
+        const product = inventory.find(p => p.id === id);
+
+        if (change > 0 && product.stock > 0) {
+            item.qty++;
+            product.stock--;
+        } else if (change < 0) {
+            item.qty--;
+            product.stock++;
+            if (item.qty === 0) cart = cart.filter(i => i.id !== id);
+        }
+        renderInventory();
+        updateCart();
+    }
+
+    function updateCart() {
+        const cartBody = document.getElementById('cartItems');
+        let rawTotal = 0;
+        let totalQty = 0;
+        let writingSubtotal = 0;
+
+        cartBody.innerHTML = cart.map(item => {
+            const sub = item.price * item.qty;
+            rawTotal += sub;
+            totalQty += item.qty;
+            if (item.category === "Writing") writingSubtotal += sub;
+            return `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>
+                        <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                        ${item.qty}
+                        <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                    </td>
+                    <td>₹${sub}</td>
+                </tr>
+            `;
+        }).join('');
+
+        // VARIOUS DISCOUNTS CALCULATION
+        let totalSavings = 0;
+
+        // 1. Bulk Discount: 10% off if total items >= 5
+        if (totalQty >= 5) {
+            totalSavings += (rawTotal * 0.10);
+        }
+
+        // 2. Category Discount: 15% off Writing items if Writing total > ₹2000
+        if (writingSubtotal > 2000) {
+            totalSavings += (writingSubtotal * 0.15);
+        }
+
+        // 3. Time-based Discount: 5% Happy Hour (e.g., if hour is after 5 PM)
+        const hour = new Date().getHours();
+        if (hour >= 17) {
+            totalSavings += (rawTotal * 0.05);
+        }
+
+        // TAX CALCULATION (GST 18%)
+        const taxableAmount = rawTotal - totalSavings;
+        const gst = taxableAmount * 0.18;
+        const finalGrandTotal = taxableAmount + gst;
+
+        // UI UPDATE
+        document.getElementById('subTotal').innerText = `₹${rawTotal.toFixed(0)}`;
+        document.getElementById('totalDiscount').innerText = `-₹${totalSavings.toFixed(0)}`;
+        document.getElementById('gstTotal').innerText = `₹${gst.toFixed(0)}`;
+        document.getElementById('finalPrice').innerText = `₹${finalGrandTotal.toFixed(0)}`;
+    }
+
+    function checkout() {
+        if (cart.length === 0) return alert("Your cart is empty!");
+        alert("Transaction Successful! Amount Paid: " + document.getElementById('finalPrice').innerText);
+        location.reload(); 
+    }
+
+    renderInventory();
+</script>
+</body>
+</html>
