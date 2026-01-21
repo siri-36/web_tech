@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University Portal</title>
+    <style>
+        :root {
+            --primary-teal: #16a085;
+            --deep-navy: #2c3e50;
+            --error-red: #ff4d4d;
+            --success-green: #27ae60;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6; /* Neutral, non-extreme background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-top: 5px solid var(--primary-teal);
+        }
+
+        h2 { color: var(--deep-navy); text-align: center; margin-bottom: 25px; }
+        
+        .form-group { margin-bottom: 18px; position: relative; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #444; }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        /* Red highlight for invalid fields */
+        .invalid {
+            border-color: var(--error-red) !important;
+            background-color: #fffafa;
+        }
+
+        /* Password Strength Meter (The Moving Line) */
+        .meter-container {
+            height: 4px;
+            background-color: #eee;
+            margin-top: 5px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        #strengthMeter {
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        .role-extra {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--primary-teal);
+            display: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--deep-navy);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover { background: #1a252f; }
+
+        #dashboard { text-align: center; display: none; }
+        .success-icon { font-size: 50px; color: var(--success-green); margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card" id="formCard">
+    <h2>Account Registration</h2>
+    <form id="regForm">
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="name" placeholder="Enter Name">
+        </div>
+
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="email" placeholder="user@gmail.com">
+        </div>
+
+        <div class="form-group">
+            <label>Role</label>
+            <select id="role">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Administrator</option>
+            </select>
+        </div>
+
+        <div id="studentField" class="role-extra" style="display: block;">
+            <label>Registration Number</label>
+            <input type="text" id="regNo" placeholder="e.g. 22BCE0001">
+        </div>
+        <div id="teacherField" class="role-extra">
+            <label>Specialization</label>
+            <input type="text" id="spec" placeholder="e.g. Cloud Computing">
+        </div>
+        <div id="adminField" class="role-extra">
+            <label>Admin Access Key</label>
+            <input type="password" id="adminKey" placeholder="Enter Secret Key">
+        </div>
+
+        <div class="form-group">
+            <label>Age</label>
+            <input type="number" id="age" placeholder="Min 18">
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="pass" placeholder="Password">
+            <div class="meter-container"><div id="strengthMeter"></div></div>
+        </div>
+
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" id="confirm" placeholder="Re-enter Password">
+        </div>
+
+        <button type="submit" class="submit-btn">Register</button>
+    </form>
+</div>
+
+<div class="card" id="dashboard">
+    <div class="success-icon">✔</div>
+    <h2 id="welcomeText">Welcome</h2>
+    <p id="roleText" style="font-size: 1.2rem; color: #666;"></p>
+    <button class="submit-btn" onclick="location.reload()" style="background: var(--primary-teal);">Logout</button>
+</div>
+
+<script>
+    const form = document.getElementById('regForm');
+    const roleSelect = document.getElementById('role');
+    const passInput = document.getElementById('pass');
+    const meter = document.getElementById('strengthMeter');
+
+    const sections = {
+        student: document.getElementById('studentField'),
+        teacher: document.getElementById('teacherField'),
+        admin: document.getElementById('adminField')
+    };
+
+    const rules = { student: 6, teacher: 8, admin: 12 };
+
+    // Toggle fields based on role
+    roleSelect.addEventListener('change', () => {
+        Object.values(sections).forEach(s => s.style.display = 'none');
+        sections[roleSelect.value].style.display = 'block';
+        updateMeter(); // Update the line color based on new role requirement
+    });
+
+    // Real-time Strength Meter (The Moving Line)
+    function updateMeter() {
+        const val = passInput.value;
+        const req = rules[roleSelect.value];
+        let percent = (val.length / req) * 100;
+        if (percent > 100) percent = 100;
+
+        meter.style.width = percent + "%";
+        
+        if (percent < 50) meter.style.backgroundColor = "var(--error-red)";
+        else if (percent < 100) meter.style.backgroundColor = "#f1c40f"; // Yellow
+        else meter.style.backgroundColor = "var(--success-green)";
+    }
+
+    passInput.addEventListener('input', updateMeter);
+
+    // Remove red highlight when user starts typing again
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', () => input.classList.remove('invalid'));
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const role = roleSelect.value;
+        const name = document.getElementById('name');
+        const email = document.getElementById('email');
+        const age = document.getElementById('age');
+        const pass = document.getElementById('pass');
+        const confirm = document.getElementById('confirm');
+
+        // Sequential Validation
+        if (name.value.trim() === "") {
+            name.classList.add('invalid');
+            alert("The Name field is wrong: Name is required.");
+            return;
+        }
+
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(email.value)) {
+            email.classList.add('invalid');
+            alert("The Email field is wrong: Please enter a valid email address.");
+            return;
+        }
+
+        // Role Specific Checks
+        if (role === 'student' && document.getElementById('regNo').value === "") {
+            document.getElementById('regNo').classList.add('invalid');
+            alert("The Registration Number field is wrong.");
+            return;
+        }
+        if (role === 'teacher' && document.getElementById('spec').value === "") {
+            document.getElementById('spec').classList.add('invalid');
+            alert("The Specialization field is wrong.");
+            return;
+        }
+        if (role === 'admin' && document.getElementById('adminKey').value === "") {
+            document.getElementById('adminKey').classList.add('invalid');
+            alert("The Access Key field is wrong.");
+            return;
+        }
+
+        if (age.value < 18) {
+            age.classList.add('invalid');
+            alert("The Age field is wrong: Minimum age is 18.");
+            return;
+        }
+
+        if (pass.value.length < rules[role]) {
+            pass.classList.add('invalid');
+            alert(`The Password field is wrong: Min ${rules[role]} characters required for ${role}.`);
+            return;
+        }
+
+        if (pass.value !== confirm.value) {
+            confirm.classList.add('invalid');
+            alert("The Confirm Password field is wrong: Passwords do not match.");
+            return;
+        }
+
+        // SUCCESS
+        document.getElementById('formCard').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.getElementById('welcomeText').innerText = `Welcome, ${name.value}!`;
+        document.getElementById('roleText').innerHTML = `Logined as: <strong>${role.toUpperCase()}</strong>`;
+    });
+</script>
+
+</body>
+</html>
