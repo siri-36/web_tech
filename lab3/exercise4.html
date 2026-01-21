@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElectroHub | Activity Manager</title>
+    <style>
+        :root {
+            --neutral-dark: #334155; /* Slate Gray */
+            --neutral-charcoal: #1e293b;
+            --neutral-light: #f1f5f9;
+            --alert-red: #be123c;
+            --success-green: #059669;
+            --text-main: #0f172a;
+            --border-gray: #cbd5e1;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background-color: #f8fafc;
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* --- Activity Sidebar --- */
+        .sidebar {
+            width: 380px;
+            background: white;
+            border-right: 1px solid var(--border-gray);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 1px 0 5px rgba(0,0,0,0.03);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            background: var(--neutral-charcoal);
+            color: white;
+        }
+
+        .sidebar-header h3 { margin: 0; font-size: 1.1rem; letter-spacing: 0.5px; }
+        .live-indicator { font-size: 0.75rem; display: flex; align-items: center; gap: 6px; margin-top: 6px; opacity: 0.8; }
+        .dot { width: 7px; height: 7px; background: #10b981; border-radius: 50%; }
+
+        #logContainer {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #ffffff;
+        }
+
+        .log-card {
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 4px solid var(--neutral-dark);
+            background: var(--neutral-light);
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .time-stamp { color: #64748b; font-weight: 600; margin-bottom: 4px; display: block; font-size: 0.75rem; }
+        .event-label { font-weight: 700; color: var(--neutral-charcoal); text-transform: uppercase; font-size: 0.75rem; }
+
+        /* --- Main Dashboard Area --- */
+        .main-panel {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .status-card {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid var(--border-gray);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .meter-label { font-weight: 600; margin-bottom: 10px; display: block; color: var(--neutral-dark); }
+        .meter-container { height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; margin: 15px 0; }
+        #intensityBar { height: 100%; width: 0%; background: var(--neutral-dark); transition: width 0.3s; }
+
+        .interaction-area {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            border: 1px solid var(--border-gray);
+            text-align: center;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-gray);
+            border-radius: 4px;
+            font-size: 0.95rem;
+            margin: 20px 0;
+            box-sizing: border-box;
+            background: #fafafa;
+        }
+
+        .input-field:focus { outline: none; border-color: var(--neutral-dark); }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-main { background: var(--neutral-charcoal); color: white; width: 100%; }
+        .btn-main:hover { background: #000000; }
+
+        .sidebar-footer { padding: 15px 20px; border-top: 1px solid var(--border-gray); display: flex; gap: 10px; }
+        .btn-outline { background: white; border: 1px solid var(--border-gray); color: #64748b; flex: 1; }
+        .btn-blue-outline { background: white; border: 1px solid var(--neutral-dark); color: var(--neutral-dark); flex: 1; }
+        .btn-blue-outline:hover { background: var(--neutral-light); }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3>Operations Activity Feed</h3>
+            <div class="live-indicator"><div class="dot"></div> System Monitoring Live</div>
+        </div>
+        <div id="logContainer">
+            <div style="text-align:center; color:#94a3b8; margin-top:20px; font-size: 0.9rem;">No data recorded</div>
+        </div>
+        <div class="sidebar-footer">
+            <button class="btn btn-outline" onclick="clearData()">Clear Feed</button>
+            <button class="btn btn-blue-outline" onclick="downloadReport()">Download Report</button>
+        </div>
+    </aside>
+
+    <main class="main-panel">
+        <div class="status-card">
+            <span class="meter-label" id="statusText">System Interaction Level: Normal</span>
+            <div class="meter-container">
+                <div id="intensityBar"></div>
+            </div>
+            <p id="alertMsg" style="color:var(--alert-red); font-weight:bold; display:none; font-size: 0.85rem;">⚠️ Warning: Abnormal interaction frequency detected.</p>
+        </div>
+
+        <div class="interaction-area" id="testArea">
+            <h2 style="margin-top:0; font-weight: 600;">Interaction Node</h2>
+            <p style="color:#64748b; font-size: 0.95rem;">Perform actions below to monitor real-time data logging.</p>
+            
+            <input type="text" class="input-field" id="customerInput" placeholder="Input text or interact here...">
+            
+            <button class="btn btn-main" id="actionBtn">Sample Interaction Button</button>
+        </div>
+    </main>
+
+<script>
+    let logEntries = [];
+    let activityCount = 0;
+    const MAX_CLICKS = 8;
+
+    function recordEvent(action, target, logicType) {
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + 
+                        now.getMinutes().toString().padStart(2, '0') + ":" + 
+                        now.getSeconds().toString().padStart(2, '0');
+
+        const entry = { time: timeStr, action, target, logic: logicType };
+        logEntries.push(entry);
+        
+        const container = document.getElementById('logContainer');
+        if (logEntries.length === 1) container.innerHTML = ''; 
+
+        const html = `
+            <div class="log-card">
+                <span class="time-stamp">${timeStr}</span>
+                <span class="event-label">${action}</span><br>
+                Source: ${target} <span style="color:#94a3b8; font-size:0.75rem;">— ${logicType}</span>
+            </div>
+        `;
+        container.insertAdjacentHTML('afterbegin', html);
+
+        if (action === 'Mouse Click') monitorIntensity();
+    }
+
+    // TARGETS UPDATED TO GLOBAL WINDOW
+    const input = document.getElementById('customerInput');
+    const btn = document.getElementById('actionBtn');
+
+    // 1. Detect clicks everywhere on the screen
+    window.addEventListener('click', (e) => {
+        // Automatically identify what was clicked for the log
+        const targetName = e.target.id ? `#${e.target.id}` : e.target.tagName;
+        recordEvent('Mouse Click', targetName, 'Global Screen Detection');
+    }, true); // True enables Capture Phase (detects instantly)
+
+    // 2. Specialized individual interactions
+    input.addEventListener('keydown', (e) => {
+        recordEvent(`Key Entry (${e.key})`, 'Text Field', 'Input Event');
+    });
+
+    input.addEventListener('focus', () => recordEvent('Field Focus', 'Text Field', 'Focus Event'));
+
+    function monitorIntensity() {
+        activityCount++;
+        const bar = document.getElementById('intensityBar');
+        const status = document.getElementById('statusText');
+        const alert = document.getElementById('alertMsg');
+
+        let width = (activityCount / MAX_CLICKS) * 100;
+        bar.style.width = Math.min(width, 100) + '%';
+
+        if (activityCount >= MAX_CLICKS) {
+            bar.style.background = 'var(--alert-red)';
+            status.innerText = "System Interaction Level: CRITICAL";
+            alert.style.display = 'block';
+        } else if (activityCount > 4) {
+            bar.style.background = '#d97706'; 
+            status.innerText = "System Interaction Level: ELEVATED";
+        }
+
+        clearTimeout(window.resetTimer);
+        window.resetTimer = setTimeout(() => {
+            activityCount = 0;
+            bar.style.width = '0%';
+            bar.style.background = 'var(--neutral-dark)';
+            status.innerText = "System Interaction Level: Normal";
+            alert.style.display = 'none';
+        }, 4000);
+    }
+
+    function clearData() {
+        logEntries = [];
+        document.getElementById('logContainer').innerHTML = '<div style="text-align:center; color:#94a3b8; margin-top:20px; font-size:0.9rem;">No data recorded</div>';
+        activityCount = 0;
+    }
+
+    function downloadReport() {
+        if (logEntries.length === 0) return alert("No data available for export.");
+        
+        let reportText = "MANAGEMENT ACTIVITY REPORT\n";
+        reportText += "Timestamp: " + new Date().toLocaleString() + "\n";
+        reportText += "----------------------------------------\n\n";
+
+        logEntries.forEach(item => {
+            reportText += `[${item.time}] ${item.action.toUpperCase()} | SOURCE: ${item.target} | METHOD: ${item.logic}\n`;
+        });
+
+        const blob = new Blob([reportText], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = "Activity_Log_Global.txt";
+        link.click();
+    }
+</script>
+</body>
+</html>
