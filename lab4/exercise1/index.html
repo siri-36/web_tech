@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Username Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: none;
+        }
+        .loading {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .available {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .taken {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .username-invalid {
+            border-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>Registration Form</h1>
+    
+    <form id="registrationForm">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required minlength="3" maxlength="20">
+            <div id="usernameFeedback" class="feedback"></div>
+        </div>
+        
+        <button type="submit" id="submitBtn" disabled>Register</button>
+    </form>
+
+    <script>
+        class UsernameChecker {
+            constructor() {
+                this.usernameInput = document.getElementById('username');
+                this.feedbackDiv = document.getElementById('usernameFeedback');
+                this.submitBtn = document.getElementById('submitBtn');
+                this.form = document.getElementById('registrationForm');
+                
+                this.takenUsernames = new Set(); // Cache for taken usernames
+                this.isChecking = false;
+                this.isValid = false;
+                
+                this.init();
+            }
+            
+            init() {
+                this.usernameInput.addEventListener('input', this.debounce(this.checkUsername.bind(this), 500));
+                this.usernameInput.addEventListener('blur', this.checkUsername.bind(this));
+                this.form.addEventListener('submit', this.handleSubmit.bind(this));
+            }
+            
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+            
+            async checkUsername() {
+                const username = this.usernameInput.value.trim();
+                
+                // Reset state
+                this.clearFeedback();
+                this.isChecking = true;
+                
+                if (username.length < 3) {
+                    this.showFeedback('Username must be at least 3 characters', 'loading');
+                    this.submitBtn.disabled = true;
+                    this.isValid = false;
+                    this.isChecking = false;
+                    return;
+                }
+                
+                // Show loading
+                this.showFeedback('Checking availability...', 'loading');
+                this.submitBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('users.json');
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch user data');
+                    }
+                    
+                    const users = await response.json();
+                    
+                    // Update cache
+                    this.takenUsernames = new Set(users.map(user => user.username.toLowerCase()));
+                    
+                    const isTaken = this.takenUsernames.has(username.toLowerCase());
+                    
+                    if (isTaken) {
+                        this.showFeedback('Username already taken', 'taken');
+                        this.usernameInput.classList.add('username-invalid');
+                        this.isValid = false;
+                    } else {
+                        this.showFeedback('Username available!', 'available');
+                        this.usernameInput.classList.remove('username-invalid');
+                        this.isValid = true;
+                    }
+                    
+                } catch (error) {
+                    console.error('Error checking username:', error);
+                    this.showFeedback('Error checking availability. Please try again.', 'loading');
+                    this.isValid = false;
+                } finally {
+                    this.isChecking = false;
+                    this.updateSubmitButton();
+                }
+            }
+            
+            showFeedback(message, type) {
+                this.feedbackDiv.textContent = message;
+                this.feedbackDiv.className = `feedback ${type}`;
+                this.feedbackDiv.style.display = 'block';
+            }
+            
+            clearFeedback() {
+                this.feedbackDiv.style.display = 'none';
+                this.usernameInput.classList.remove('username-invalid');
+            }
+            
+            updateSubmitButton() {
+                this.submitBtn.disabled = !this.isValid || this.isChecking;
+            }
+            
+            handleSubmit(e) {
+                if (!this.isValid) {
+                    e.preventDefault();
+                    this.showFeedback('Please choose an available username', 'taken');
+                    return false;
+                }
+                // Form is valid, allow submission
+                alert('Registration successful! ');
+                e.preventDefault(); // Prevent actual form submission for demo
+                return false;
+            }
+        }
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new UsernameChecker();
+        });
+    </script>
+</body>
+</html>
