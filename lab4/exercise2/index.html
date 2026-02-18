@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product Search • AJAX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f8f9fc;
+      color: #1f2937;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 500;
+      color: #111827;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .search-wrapper {
+      position: relative;
+      margin-bottom: 2.5rem;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 14px 20px 14px 48px;
+      font-size: 1.05rem;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: all 0.2s ease;
+    }
+
+    #searchInput:focus {
+      outline: none;
+      border-color: #9ca3af;
+      box-shadow: 0 0 0 3px rgba(156,163,175,0.15);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 1.3rem;
+    }
+
+    #results {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      display: none;                    /* Hidden by default */
+    }
+
+    #results.has-content {
+      display: block;
+    }
+
+    .product {
+      padding: 18px 24px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.15s;
+    }
+
+    .product:hover {
+      background: #f8fafc;
+    }
+
+    .product:last-child {
+      border-bottom: none;
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .product-name {
+      font-weight: 500;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .product-category {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .product-price {
+      font-weight: 600;
+      color: #1e40af;
+      font-size: 1.1rem;
+      white-space: nowrap;
+    }
+
+    .loading,
+    .no-results,
+    .error {
+      padding: 2.5rem 1rem;
+      text-align: center;
+      color: #6b7280;
+      font-size: 1.05rem;
+    }
+
+    .error {
+      color: #991b1b;
+      background: #fef2f2;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid #e5e7eb;
+      border-top: 3px solid #64748b;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 500px) {
+      .product {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .product-price {
+        margin-top: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Product Search</h1>
+
+  <div class="search-wrapper">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Search products (laptop, watch, shoes...)" autocomplete="off"/>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<script>
+const searchInput = document.getElementById('searchInput');
+const resultsDiv    = document.getElementById('results');
+
+let debounceTimer;
+const DATA_URL = 'products.json'; // change to real API later if needed
+
+function renderProducts(products) {
+  if (!products || products.length === 0) {
+    resultsDiv.innerHTML = `<div class="no-results">No products found</div>`;
+    return;
+  }
+
+  let html = '';
+  for (const p of products) {
+    html += `
+      <div class="product">
+        <div class="product-info">
+          <div class="product-name">${p.name}</div>
+          <div class="product-category">${p.category}</div>
+        </div>
+        <div class="product-price">₹${Number(p.price).toLocaleString('en-IN')}</div>
+      </div>
+    `;
+  }
+  resultsDiv.innerHTML = html;
+}
+
+async function searchProducts(query) {
+  if (query.length < 2) {
+    resultsDiv.innerHTML = '';
+    resultsDiv.classList.remove('has-content');
+    return;
+  }
+
+  // Show container + loading state
+  resultsDiv.classList.add('has-content');
+  resultsDiv.innerHTML = `
+    <div class="loading">
+      <div class="spinner"></div>
+      Searching...
+    </div>
+  `;
+
+  try {
+    const res = await fetch(DATA_URL);
+    if (!res.ok) throw new Error('Network response was not ok');
+
+    const products = await res.json();
+
+    const filtered = products.filter(p =>
+      p.name.toLowerCase().includes(query.toLowerCase()) ||
+      p.category.toLowerCase().includes(query.toLowerCase())
+    );
+
+    renderProducts(filtered);
+
+  } catch (err) {
+    console.error('Search error:', err);
+    resultsDiv.innerHTML = `
+      <div class="error">
+        Sorry, something went wrong while searching.<br>
+        Please try again later.
+      </div>
+    `;
+    // container stays visible because of error message
+  }
+}
+
+function debouncedSearch() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    searchProducts(searchInput.value.trim());
+  }, 400);
+}
+
+searchInput.addEventListener('input', debouncedSearch);
+</script>
+</body>
+</html>
