@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Management System</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .box { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #1a73e8; border-bottom: 2px solid #e8f0fe; padding-bottom: 10px; }
+        
+        .inputs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex: 1; min-width: 150px; }
+        
+        button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
+        .add-btn { background: #34a853; color: white; }
+        .update-btn { background: #fbbc05; color: white; display: none; }
+        .edit-btn { background: #4285f4; color: white; margin-right: 5px; }
+        .del-btn { background: #ea4335; color: white; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; }
+        .error-msg { color: red; font-size: 14px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Student Record System</h2>
+    
+    <div id="errorBox" class="error-msg"></div>
+
+    <div class="inputs">
+        <input type="hidden" id="currentIndex">
+        <input type="text" id="stuName" placeholder="Full Name">
+        <input type="text" id="stuCourse" placeholder="Course">
+        <input type="number" id="stuMarks" placeholder="Marks">
+        <button id="addBtn" class="add-btn" onclick="createStudent()">Add Student</button>
+        <button id="updateBtn" class="update-btn" onclick="saveUpdate()">Save Changes</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Course</th>
+                <th>Marks</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="studentTableBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    let students = [];
+
+    // --- READ: Fetch JSON Data ---
+    async function loadStudents() {
+        try {
+            const response = await fetch('students.json');
+            if (!response.ok) throw new Error("Could not find students.json");
+            
+            // Parse JSON response
+            students = await response.json();
+            renderTable();
+        } catch (error) {
+            document.getElementById('errorBox').innerText = "Error: " + error.message;
+            console.error("Parsing Error:", error);
+        }
+    }
+
+    // --- CREATE ---
+    function createStudent() {
+        const name = document.getElementById('stuName').value;
+        const course = document.getElementById('stuCourse').value;
+        const marks = document.getElementById('stuMarks').value;
+
+        if (validate(name, course, marks)) {
+            const newStudent = {
+                id: Math.floor(Math.random() * 1000),
+                name: name,
+                course: course,
+                marks: parseInt(marks)
+            };
+            students.push(newStudent);
+            renderTable();
+            clearForm();
+        }
+    }
+
+    // --- UPDATE (Step 1: Fill Form) ---
+    function editStudent(index) {
+        const s = students[index];
+        document.getElementById('stuName').value = s.name;
+        document.getElementById('stuCourse').value = s.course;
+        document.getElementById('stuMarks').value = s.marks;
+        document.getElementById('currentIndex').value = index;
+
+        document.getElementById('addBtn').style.display = 'none';
+        document.getElementById('updateBtn').style.display = 'inline-block';
+    }
+
+    // --- UPDATE (Step 2: Save) ---
+    function saveUpdate() {
+        const index = document.getElementById('currentIndex').value;
+        students[index].name = document.getElementById('stuName').value;
+        students[index].course = document.getElementById('stuCourse').value;
+        students[index].marks = parseInt(document.getElementById('stuMarks').value);
+
+        document.getElementById('addBtn').style.display = 'inline-block';
+        document.getElementById('updateBtn').style.display = 'none';
+        
+        renderTable();
+        clearForm();
+    }
+
+    // --- DELETE ---
+    function deleteStudent(index) {
+        if(confirm("Delete this record?")) {
+            students.splice(index, 1);
+            renderTable();
+        }
+    }
+
+    // UI HELPER: Render Table
+    function renderTable() {
+        const tbody = document.getElementById('studentTableBody');
+        tbody.innerHTML = "";
+
+        students.forEach((s, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${s.id}</td>
+                    <td>${s.name}</td>
+                    <td>${s.course}</td>
+                    <td>${s.marks}</td>
+                    <td>
+                        <button class="edit-btn" onclick="editStudent(${index})">Edit</button>
+                        <button class="del-btn" onclick="deleteStudent(${index})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // VALIDATION
+    function validate(n, c, m) {
+        if (!n || !c || !m) {
+            alert("Please fill all fields!");
+            return false;
+        }
+        return true;
+    }
+
+    function clearForm() {
+        document.getElementById('stuName').value = "";
+        document.getElementById('stuCourse').value = "";
+        document.getElementById('stuMarks').value = "";
+    }
+
+    // Initial Load
+    window.onload = loadStudents;
+</script>
+
+</body>
+</html>
