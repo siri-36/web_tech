@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyCast | Live Weather</title>
+    <style>
+        :root { --primary: #0ea5e9; --text: #1e293b; --bg: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2.5rem; border-radius: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 400px; transition: transform 0.3s ease; }
+        .search-row { display: flex; gap: 8px; margin-bottom: 20px; }
+        input { flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--primary); }
+        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        
+        /* Loading Spinner */
+        #loader { display: none; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Weather UI */
+        #weather-box { display: none; text-align: center; animation: fadeIn 0.5s ease; }
+        .temp { font-size: 4rem; font-weight: 800; color: var(--text); margin: 10px 0; }
+        .city-name { font-size: 1.5rem; color: #64748b; margin: 0; }
+        .condition { text-transform: capitalize; color: var(--primary); font-weight: 600; font-size: 1.1rem; }
+        .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #f1f5f9; }
+        .meta-item span { display: block; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; }
+        .meta-item b { font-size: 1.1rem; color: var(--text); }
+        #error-msg { color: #ef4444; background: #fee2e2; padding: 10px; border-radius: 8px; margin-top: 10px; display: none; font-size: 0.9rem; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="search-row">
+        <input type="text" id="cityInput" placeholder="Enter city name...">
+        <button onclick="fetchWeather()">Search</button>
+    </div>
+
+    <div id="loader"></div>
+    <div id="error-msg"></div>
+
+    <div id="weather-box">
+        <p class="city-name" id="cityName">City Name</p>
+        <div class="temp" id="tempDisplay">0°C</div>
+        <div class="condition" id="conditionDisplay">Sunny</div>
+        
+        <div class="meta">
+            <div class="meta-item"><span>Humidity</span><b id="humidityDisplay">0%</b></div>
+            <div class="meta-item"><span>Source</span><b id="cacheStatus">Live</b></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CACHE VARIABLE
+    let weatherCache = {};
+    const API_KEY = 6868eb31c5164fe832ead55e43f62046
+
+    async function fetchWeather() {
+        const city = document.getElementById('cityInput').value.trim();
+        const loader = document.getElementById('loader');
+        const errorMsg = document.getElementById('error-msg');
+        const weatherBox = document.getElementById('weather-box');
+
+        if (!city) return;
+
+        // CHECK CACHE
+        if (weatherCache[city.toLowerCase()]) {
+            renderWeather(weatherCache[city.toLowerCase()], true);
+            return;
+        }
+
+        // RESET UI
+        loader.style.display = "block";
+        errorMsg.style.display = "none";
+        weatherBox.style.display = "none";
+
+        try {
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`;
+            const response = await fetch(url);
+
+            // HANDLE STATUS CODES
+            if (!response.ok) {
+                if (response.status === 404) throw new Error("City not found. Check spelling!");
+                if (response.status === 401) throw new Error("API Key not active yet (wait 2 hours).");
+                throw new Error("Server error. Please try again later.");
+            }
+
+            const data = await response.json();
+            
+            // SAVE TO CACHE
+            weatherCache[city.toLowerCase()] = data;
+            renderWeather(data, false);
+
+        } catch (err) {
+            errorMsg.innerText = err.message;
+            errorMsg.style.display = "block";
+        } finally {
+            loader.style.display = "none";
+        }
+    }
+
+    function renderWeather(data, isCached) {
+        document.getElementById('cityName').innerText = `${data.name}, ${data.sys.country}`;
+        document.getElementById('tempDisplay').innerText = `${Math.round(data.main.temp)}°C`;
+        document.getElementById('conditionDisplay').innerText = data.weather[0].description;
+        document.getElementById('humidityDisplay').innerText = `${data.main.humidity}%`;
+        document.getElementById('cacheStatus').innerText = isCached ? "Cached" : "Live";
+        
+        document.getElementById('weather-box').style.display = "block";
+    }
+</script>
+</body>
+</html>
