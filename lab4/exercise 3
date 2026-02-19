@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProStudent | Management System</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 { color: #1e293b; margin-bottom: 25px; text-align: center; }
+
+        /* Form Styling */
+        .form-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .btn-add { background: var(--primary); color: white; }
+        .btn-update { background: var(--success); color: white; }
+        .btn-cancel { background: var(--secondary); color: white; }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #64748b;
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        .actions button {
+            margin-right: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+        }
+
+        .actions .edit-btn:hover { color: var(--success); border-color: var(--success); }
+        .actions .delete-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+        #msg-box {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            display: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Student Management System</h2>
+
+    <div id="msg-box"></div>
+
+    <div class="form-group">
+        <input type="hidden" id="studentId">
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="text" id="dept" placeholder="Department">
+        <input type="number" id="marks" placeholder="Marks">
+        <button id="mainBtn" class="btn btn-add" onclick="handleCRUD()">Add Student</button>
+        <button id="cancelBtn" class="btn btn-cancel" style="display:none;" onclick="resetForm()">Cancel</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Marks</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="studentBody">
+            </tbody>
+    </table>
+</div>
+
+
+
+<script>
+    // Configuration: Set to true to use LocalStorage, false for a real API
+    const USE_MOCK = true; 
+    const API_URL = "https://jsonplaceholder.typicode.com/users"; // Dummy URL for demo
+
+    document.addEventListener('DOMContentLoaded', fetchStudents);
+
+    async function handleCRUD() {
+        const id = document.getElementById('studentId').value;
+        const data = {
+            name: document.getElementById('name').value,
+            dept: document.getElementById('dept').value,
+            marks: document.getElementById('marks').value
+        };
+
+        if(!data.name || !data.dept || !data.marks) {
+            notify("Please fill all fields", "danger");
+            return;
+        }
+
+        if (USE_MOCK) {
+            saveMockData(id, data);
+        } else {
+            await performAjaxRequest(id ? 'PUT' : 'POST', id ? `${API_URL}/${id}` : API_URL, data);
+        }
+    }
+
+    // --- READ (Fetch) ---
+    async function fetchStudents() {
+        if (USE_MOCK) {
+            const students = JSON.parse(localStorage.getItem('students') || '[]');
+            renderTable(students);
+            return;
+        }
+
+        try {
+            const response = await fetch(API_URL);
+            if (response.ok) {
+                const data = await response.json();
+                renderTable(data);
+            } else {
+                handleError(response.status);
+            }
+        } catch (e) { notify("Server connection failed", "danger"); }
+    }
+
+    // --- DELETE ---
+    async function deleteStudent(id) {
+        if(!confirm("Delete this record?")) return;
+
+        if (USE_MOCK) {
+            let students = JSON.parse(localStorage.getItem('students') || '[]');
+            students = students.filter(s => s.id != id);
+            localStorage.setItem('students', JSON.stringify(students));
+            fetchStudents();
+            notify("Student removed", "success");
+        } else {
+            const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            if(response.ok) { fetchStudents(); notify("Deleted!", "success"); }
+        }
+    }
+
+    // --- UTILITIES ---
+    function renderTable(data) {
+        const tbody = document.getElementById('studentBody');
+        tbody.innerHTML = data.map(s => `
+            <tr>
+                <td>#${s.id}</td>
+                <td><strong>${s.name}</strong></td>
+                <td>${s.dept || 'General'}</td>
+                <td>${s.marks || 0}</td>
+                <td class="actions" style="text-align: right;">
+                    <button class="edit-btn" onclick="prepEdit(${s.id}, '${s.name}', '${s.dept}', ${s.marks})">Edit</button>
+                    <button class="delete-btn" onclick="deleteStudent(${s.id})">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function prepEdit(id, name, dept, marks) {
+        document.getElementById('studentId').value = id;
+        document.getElementById('name').value = name;
+        document.getElementById('dept').value = dept;
+        document.getElementById('marks').value = marks;
+        
+        document.getElementById('mainBtn').innerText = "Update Student";
+        document.getElementById('mainBtn').className = "btn btn-update";
+        document.getElementById('cancelBtn').style.display = "inline";
+    }
+
+    function resetForm() {
+        document.getElementById('studentId').value = "";
+        document.getElementById('name').value = "";
+        document.getElementById('dept').value = "";
+        document.getElementById('marks').value = "";
+        document.getElementById('mainBtn').innerText = "Add Student";
+        document.getElementById('mainBtn').className = "btn btn-add";
+        document.getElementById('cancelBtn').style.display = "none";
+    }
+
+    function notify(msg, type) {
+        const box = document.getElementById('msg-box');
+        box.innerText = msg;
+        box.style.display = "block";
+        box.style.backgroundColor = type === 'success' ? '#dcfce7' : '#fee2e2';
+        box.style.color = type === 'success' ? '#166534' : '#991b1b';
+        setTimeout(() => box.style.display = "none", 3000);
+    }
+
+    // Mock Backend Logic
+    function saveMockData(id, data) {
+        let students = JSON.parse(localStorage.getItem('students') || '[]');
+        if (id) {
+            const index = students.findIndex(s => s.id == id);
+            students[index] = { ...data, id: parseInt(id) };
+            notify("Student updated", "success");
+        } else {
+            const newStudent = { ...data, id: Date.now() };
+            students.push(newStudent);
+            notify("Student added", "success");
+        }
+        localStorage.setItem('students', JSON.stringify(students));
+        resetForm();
+        fetchStudents();
+    }
+</script>
+
+</body>
+</html>
