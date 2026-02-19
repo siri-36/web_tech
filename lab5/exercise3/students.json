@@ -1,0 +1,20 @@
+[
+  {
+    "id": 101,
+    "name": "John Doe",
+    "course": "IT",
+    "marks": 88
+  },
+  {
+    "id": 102,
+    "name": "Sarah Connor",
+    "course": "Cyber Security",
+    "marks": 95
+  },
+  {
+    "id": 103,
+    "name": "Mike Ross",
+    "course": "Law & Tech",
+    "marks": 78
+  }
+]
