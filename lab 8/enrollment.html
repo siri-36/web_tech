@@ -33,7 +33,7 @@
             font-weight: 500;
             color: black;
         }
-        input {
+        input, select {
             width: 100%;
             padding: 12px;
             border: 1px solid #ccc;
@@ -73,25 +73,29 @@
         
         <div class="input-group">
             <label>Course Name:</label>
-            <input type="text" id="courseName" placeholder="Enter course name">
+            <input type="text" id="courseName" placeholder="Web Technologies">
         </div>
         
         <div class="input-group">
-            <label>Instructor Name:</label>
-            <input type="text" id="instructor" placeholder="Enter instructor">
+            <label>Instructor:</label>
+            <input type="text" id="instructor" placeholder="Dr. Kumar">
         </div>
         
         <div class="input-group">
-            <label>Seats Available (true/false):</label>
-            <input type="text" id="seatsAvailable" placeholder="true or false">
+            <label>Seats Available:</label>
+            <select id="seatsAvailable">
+                <option value="" disabled selected>Yes or No</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+            </select>
         </div>
         
-        <button onclick="enrollCourse()">Enroll in Course</button>
+        <button onclick="enrollCourse()">Enroll Course</button>
         <div id="result"></div>
     </div>
 
     <script>
-        // ES6 Class - exactly from PPT syntax
+        // ES6 Class - exactly PPT syntax [file:1]
         class Course {
             constructor(courseName, instructor) {
                 this.courseName = courseName;
@@ -107,27 +111,32 @@
             // Get input values
             let courseName = document.getElementById("courseName").value || "Unknown Course";
             let instructor = document.getElementById("instructor").value || "Unknown Instructor";
-            let seatsInput = document.getElementById("seatsAvailable").value.toLowerCase();
+            let seatsAvailable = document.getElementById("seatsAvailable").value;
             
-            // Create course instance
+            if (!seatsAvailable) {
+                document.getElementById("result").innerHTML = "Please select seats availability";
+                return;
+            }
+            
+            // Create Course instance
             let course1 = new Course(courseName, instructor);
             
-            // Promise - exactly from PPT syntax
-            let enrollCourse = new Promise((resolve, reject) => {
-                let seatsAvailable = seatsInput === "true";
+            // Display course details first
+            document.getElementById("result").innerHTML = course1.displayCourse();
+            
+            // Promise - exactly PPT syntax [file:1]
+            let enrollPromise = new Promise((resolve, reject) => {
+                let seatsAvail = seatsAvailable === "true";
                 
-                if(seatsAvailable) {
+                if(seatsAvail) {
                     resolve("Enrollment Successful");
                 } else {
                     reject("Course Full");
                 }
             });
             
-            // Display course details first
-            document.getElementById("result").innerHTML = course1.displayCourse();
-            
-            // Handle promise with then/catch - PPT arrow function syntax
-            enrollCourse
+            // Promise handling with arrow functions - PPT syntax [file:1]
+            enrollPromise
                 .then(msg => {
                     document.getElementById("result").innerHTML += `\n${msg}`;
                 })
