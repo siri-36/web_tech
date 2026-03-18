@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Object - ES6 Destructuring & Spread</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: white;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            border: 1px solid #ddd;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 25px;
+            color: black;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: black;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input:invalid {
+            border-color: #ff4444;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            color: black;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background: #e8e8e8;
+        }
+        button:disabled {
+            background: #eee;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        #result {
+            padding: 20px;
+            border: 1px solid #ddd;
+            background: #fafafa;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: #ff4444;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Student Object Processor</h1>
+        
+        <div class="input-group">
+            <label>Student ID:</label>
+            <input type="number" id="id" placeholder="Enter ID">
+        </div>
+        
+        <div class="input-group">
+            <label>Student Name:</label>
+            <input type="text" id="name" placeholder="Enter name">
+        </div>
+        
+        <div class="input-group">
+            <label>Department:</label>
+            <input type="text" id="department" placeholder="Enter department">
+        </div>
+        
+        <div class="input-group">
+            <label>Marks (0-100):</label>
+            <input type="number" id="marks" min="0" max="100" step="1" placeholder="0-100" required>
+        </div>
+        
+        <button id="processBtn" onclick="processStudent()">Process Student</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function processStudent() {
+            let id = parseInt(document.getElementById("id").value) || 0;
+            let name = document.getElementById("name").value || "Unknown";
+            let department = document.getElementById("department").value || "Unknown";
+            let marksInput = document.getElementById("marks").value;
+            let marks = parseInt(marksInput) || 0;
+            
+            // MARKS RESTRICTION VALIDATION (0-100)
+            if (marks < 0 || marks > 100 || isNaN(marks)) {
+                document.getElementById("result").innerHTML = 
+                    `❌ Error: Marks must be between 0 and 100\nPlease enter a valid number.`;
+                document.getElementById("processBtn").disabled = true;
+                setTimeout(() => {
+                    document.getElementById("processBtn").disabled = false;
+                }, 2000);
+                return;
+            }
+            
+            const student = {
+                id: id,
+                name: name,
+                department: department,
+                marks: marks
+            };
+            
+            // Object destructuring - PPT syntax
+            const {id: studentId, name: studentName, department: studentDept, marks: studentMarks} = student;
+            
+            // Calculate grade based on marks
+            let grade = "F";
+            if (marks >= 90) grade = "A";
+            else if (marks >= 75) grade = "B";
+            else if (marks >= 60) grade = "C";
+            else if (marks >= 50) grade = "D";
+            
+            // Spread operator - PPT syntax
+            const updatedStudent = {
+                ...student,
+                grade: grade
+            };
+            
+            document.getElementById("result").innerHTML = 
+                `${studentId} ${studentName} ${studentDept} ${studentMarks}\n` +
+                `${JSON.stringify(updatedStudent, null, 2)}`;
+        }
+    </script>
+</body>
+</html>
