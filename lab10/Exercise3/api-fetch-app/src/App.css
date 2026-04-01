@@ -1,0 +1,105 @@
+.App {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  padding: 20px;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.loading {
+  text-align: center;
+  font-size: 1.3rem;
+  color: #3498db;
+  padding: 60px 20px;
+}
+
+.error {
+  text-align: center;
+  padding: 40px;
+  background: #fee;
+  border: 1px solid #f99;
+  border-radius: 8px;
+  color: #c00;
+}
+
+.error button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.error button:hover {
+  background: #c0392b;
+}
+
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.post-card {
+  background: #f8f9fa;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.post-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.post-card h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.post-card p {
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.post-card small {
+  color: #888;
+  font-style: italic;
+}
+
+.info {
+  margin-top: 40px;
+  padding: 20px;
+  background: #f0f8ff;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #34495e;
+  border-left: 5px solid #3498db;
+}
