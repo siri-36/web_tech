@@ -1,0 +1,13 @@
+{
+  "name": "node-mongodb-crud",
+  "version": "1.0.0",
+  "description": "Node.js application performing CRUD operations with MongoDB and Mongoose",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^8.0.0"
+  }
+}
